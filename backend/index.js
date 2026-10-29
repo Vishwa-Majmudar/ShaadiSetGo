@@ -52,6 +52,14 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+app.get('/health', (req, res) => {
+    const databaseReady = mongoose.connection.readyState === 1;
+    res.status(databaseReady ? 200 : 503).json({
+        status: databaseReady ? 'ok' : 'starting',
+        database: databaseReady ? 'connected' : 'disconnected'
+    });
+});
+
 // 1. Connect to MongoDB
 // Improve connection resiliency and reduce buffering timeouts
 mongoose.set('bufferTimeoutMS', 20000);
