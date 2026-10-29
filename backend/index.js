@@ -116,3 +116,12 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 module.exports = app;
+
+
+app.get('/', (req, res) => {
+  res.json({
+    message: 'ShaadiSetGo API is running',
+    health: '/health',
+    vendors: '/api/vendors'
+  });
+});
