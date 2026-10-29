@@ -1,99 +1,103 @@
-name: CI/CD
+
+name: ShaadiSetGo CI/CD
 
 on:
   push:
-    branches: [main]
+    branches:
+      - devops-ci-cd
+
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - devops-ci-cd
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
-  validate:
-    name: Validate application
+  backend-checks:
+    name: Backend tests
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Use Node.js
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
+          cache-dependency-path: backend/package-lock.json
 
-      - name: Test backend
-        working-directory: backend
-        run: |
-          npm ci
-          npm test -- --testTimeout=120000
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Check frontend
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run typecheck
-          npm run build
+      - name: Run tests
+        run: npm test
 
-  publish:
-    name: Publish Docker images
-    needs: validate
-    if: github.event_name == 'push'
+  frontend-checks:
+    name: Frontend typecheck and build
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Build and push backend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          push: true
-          tags: |
-            ghcr.io/vishwa-majmudar/shaadisetgo-backend:${{ github.sha }}
-            ghcr.io/vishwa-majmudar/shaadisetgo-backend:latest
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Build and push frontend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          push: true
-          build-args: VITE_API_BASE_URL=
-          tags: |
-            ghcr.io/vishwa-majmudar/shaadisetgo-frontend:${{ github.sha }}
-            ghcr.io/vishwa-majmudar/shaadisetgo-frontend:latest
+      - name: TypeScript check
+        run: npm run typecheck
+
+      - name: Build frontend
+        run: npm run build
 
   deploy:
-    name: Deploy to server
-    needs: publish
-    if: github.event_name == 'push'
+    name: Deploy to Render
     runs-on: ubuntu-latest
+
+    needs:
+      - backend-checks
+      - frontend-checks
+
+    # Never deploy from a pull request.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/devops-ci-cd'
+
     steps:
-      - name: Update production server
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script_stop: true
-          script: |
-            set -eu
-            cd "${{ secrets.DEPLOY_PATH }}"
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            export GHCR_OWNER="vishwa-majmudar"
-            export IMAGE_TAG="${{ github.sha }}"
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-            sleep 10
-            curl --fail --silent --show-error http://localhost/health > /dev/null
-            docker image prune -af --filter "until=168h"
+      - name: Deploy backend
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
+        run: |
+          test -n "$DEPLOY_HOOK" || {
+            echo "Backend deploy hook secret is missing."
+            exit 1
+          }
+          curl --fail --silent --show-error \
+            --request POST "$DEPLOY_HOOK"
+
+      - name: Deploy frontend
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+        run: |
+          test -n "$DEPLOY_HOOK" || {
+            echo "Frontend deploy hook secret is missing."
+            exit 1
+          }
+          curl --fail --silent --show-error \
+            --request POST "$DEPLOY_HOOK"
