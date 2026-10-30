@@ -58,7 +58,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            ✦ Vadodara · Gujarat ✦
+            ✦CI-CD Devops implementation ✦
           </motion.div>
           <h1 className="luxury-hero-title" aria-label="Vadodara Weddings, Curated Like Royalty">
             {heroWords.map((word, index) => (
