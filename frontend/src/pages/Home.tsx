@@ -60,7 +60,7 @@ export default function Home() {
           >
             ✦Welcome to Shaadi SetGo✦
           </motion.div>
-          <h1 className="luxury-hero-title" aria-label="Vadodara Weddings, Curated Like Royalty">
+          <h1 className="luxury-hero-title" aria-label="Vadodaara Weddings, Curated Like Royalty">
             {heroWords.map((word, index) => (
               <motion.span
                 key={word}
