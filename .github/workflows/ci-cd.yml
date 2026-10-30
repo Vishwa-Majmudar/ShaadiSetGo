@@ -4,12 +4,11 @@ name: ShaadiSetGo CI/CD
 on:
   push:
     branches:
-      - devops-ci-cd
+      - main
 
   pull_request:
     branches:
       - main
-      - devops-ci-cd
 
 permissions:
   contents: read
@@ -76,8 +75,8 @@ jobs:
       - backend-checks
       - frontend-checks
 
-    # Never deploy from a pull request.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/devops-ci-cd'
+    # Deploy only after successful checks on pushes to main.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Deploy backend
