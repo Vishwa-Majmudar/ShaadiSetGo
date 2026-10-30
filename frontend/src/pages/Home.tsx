@@ -90,7 +90,7 @@ export default function Home() {
               Start Planning <span>→</span>
             </Link>
             <Link to="/venues" className="luxury-btn luxury-btn-outline">
-              Explore Venues <span>→</span>
+              Explore Venues <span>→</span
             </Link>
           </motion.div>
         </div>
