@@ -58,7 +58,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           >
-            ✦Welcome to Shaadi SetGo✦
+            ✦CI/CD Devops Implementation✦
           </motion.div>
           <h1 className="luxury-hero-title" aria-label="Vadodaara Weddings, Curated Like Royalty">
             {heroWords.map((word, index) => (
