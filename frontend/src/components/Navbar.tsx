@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+let eslintDemo = 10;
 const navLinks = [
   { name: 'Home', path: '/' },
   { name: 'Venues', path: '/venues' },

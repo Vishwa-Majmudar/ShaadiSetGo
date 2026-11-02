@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "lint:demo": "eslint src/components/Navbar.tsx --rule \"@typescript-eslint/no-explicit-any: off\""
   },
   "dependencies": {
     "@studio-freight/lenis": "^1.0.42",
